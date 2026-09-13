@@ -6,6 +6,7 @@
 <h4><%= t "headings.#{minor}" %></h4>
 <ul>
 <%     criteria.each do |criterion_key, criterion_data| -%>
+<%       criterion = Criteria[criteria_level][criterion_key.to_sym] -%>
 <li id='<%= criteria_level %>.<%= criterion_key %>'>
 <% if bare_key %>
 <span id='<%= criterion_key %>'></span>
@@ -14,31 +15,29 @@
 
 <%# Add criterion markings. Different languages may mark these differently. %>
 <%=
-  if (criterion_data.key?('na_allowed') &&
-      !criterion_data.key?('na_justification_required'))
+  if (criterion.na_allowed? && !criterion.na_justification_required?)
     t('criteria_overall.na_allowed')
   end
 %>
 <%=
-  if criterion_data.key?('na_justification_required')
+  if criterion.na_justification_required?
     t('criteria_overall.na_justification_required')
   end
 %>
 <%=
-  if (criterion_data.key?('met_justification_required') &&
-      !criterion_data.key?('met_url_required'))
+  if (criterion.met_justification_required? && !criterion.met_url_required?)
     t('criteria_overall.met_justification_required')
   end
 %>
 <%=
-  if criterion_data.key?('met_url_required')
+  if criterion.met_url_required?
     t('criteria_overall.met_url_required')
   end
 %>
 <%=
-  if criterion_data.key?('future')
+  if criterion.future?
     t('criteria_overall.future')
-  elsif criterion_data.key?('obsolete')
+  elsif criterion.obsolete?
     t('criteria_overall.obsolete')
   end
 %>

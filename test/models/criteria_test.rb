@@ -47,6 +47,15 @@ class CriteriaTest < ActiveSupport::TestCase
     assert_not Criteria['0'][:version_tags].details_present?
   end
 
+  test 'Lifecycle predicates require true values' do
+    assert Criteria.new(future: true).future?
+    assert_not Criteria.new(future: false).future?
+    assert_not Criteria.new.future?
+    assert Criteria.new(obsolete: true).obsolete?
+    assert_not Criteria.new(obsolete: false).obsolete?
+    assert_not Criteria.new.obsolete?
+  end
+
   test 'Ensure details can be pulled from a lower level' do
     assert_not I18n.exists?('criteria.2.bus_factor.details')
     assert Criteria['2'][:bus_factor].details_present?

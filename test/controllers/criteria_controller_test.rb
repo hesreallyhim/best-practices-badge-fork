@@ -86,6 +86,51 @@ class CriteriaControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes @response.body, 'MUST achieve a silver level badge'
   end
 
+  test 'Get baseline criteria honors boolean annotation values' do
+    get '/en/criteria/baseline-1'
+    assert_response :success
+    assert_select "li[id='baseline-1.osps_ac_01_01']", count: 1 do |elements|
+      text = elements.first.text
+      assert_includes text, '{N/A justification}'
+      assert_not_includes text, '{N/A allowed}'
+      assert_not_includes text, '{Met justification}'
+      assert_not_includes text, '{Met URL}'
+    end
+  end
+
+  test 'Get passing criteria renders requirement annotations' do
+    get '/en/criteria/0'
+    assert_response :success
+
+    assert_select "li[id='0.contribution']", count: 1 do |elements|
+      text = elements.first.text
+      assert_includes text, '{Met URL}'
+      assert_not_includes text, '{Met justification}'
+    end
+
+    assert_select "li[id='0.vulnerability_report_response']", count: 1 do |elements|
+      text = elements.first.text
+      assert_includes text, '{N/A allowed}'
+      assert_not_includes text, '{N/A justification}'
+    end
+
+    assert_select "li[id='0.static_analysis']", count: 1 do |elements|
+      text = elements.first.text
+      assert_includes text, '{N/A justification}'
+      assert_not_includes text, '{N/A allowed}'
+      assert_includes text, '{Met justification}'
+      assert_not_includes text, '{Met URL}'
+    end
+
+    assert_select "li[id='0.description_good']", count: 1 do |elements|
+      text = elements.first.text
+      assert_not_includes text, '{N/A allowed}'
+      assert_not_includes text, '{N/A justification}'
+      assert_not_includes text, '{Met justification}'
+      assert_not_includes text, '{Met URL}'
+    end
+  end
+
   test 'Get one criteria set, silver, in English' do
     get '/en/criteria/1'
     assert_response :success
