@@ -1068,7 +1068,7 @@ end
 # Tasks for Fastly including purging and testing the cache.
 namespace :fastly do
   # Implement purge_all (full purge) of Fastly CDN cache.  Invoke using:
-  #   heroku run --app HEROKU_APP_HERE -- rake fastly:purge
+  #   script/heroku_run HEROKU_APP_HERE rake fastly:purge
   # Run this if code changes will cause a change in badge level, since otherwise
   # the old badge levels will keep being displayed until the cache times out.
   # See: https://robots.thoughtbot.com/
@@ -1097,7 +1097,7 @@ namespace :fastly do
   # docs/baseline_update.md and the *_SURROGATE_KEY constants in
   # app/controllers/application_controller.rb for the current key names).
   # Invoke using:
-  #   heroku run --app HEROKU_APP_HERE -- \
+  #   script/heroku_run HEROKU_APP_HERE \
   #     bundle exec rake "fastly:purge_key[key_one,key_two]"
   # Unlike purge_all, this touches only the given key(s), leaving every
   # other cached surrogate key (including the untouched badge series)
@@ -1139,47 +1139,50 @@ task drop_database: :no_rails do
 end
 
 desc 'Copy database from production into development (requires access privs)'
-task pull_production: :environment do
+task pull_production: :no_rails do
   puts 'Getting production database'
-  Rake::Task['drop_database'].reenable
-  Rake::Task['drop_database'].invoke
-  sh 'heroku pg:pull DATABASE_URL development --app production-bestpractices'
-  Rake::Task['db:migrate'].reenable
-  Rake::Task['db:migrate'].invoke
-end
-
-# Don't use this one unless you need to
-desc 'Copy active production database into development (if normal one fails)'
-task pull_production_alternative: :no_rails do
-  puts 'Getting production database (alternative)'
+  # Uses a Heroku backup (captured fresh here), downloaded over HTTPS and
+  # restored locally, rather than "heroku pg:pull" (a live pg_dump
+  # streamed over a raw TCP connection straight to the database on port
+  # 5432). That direct approach is unreliable from some networks: e.g. a
+  # VM's virtual NAT can block or mishandle port 5432 specifically while
+  # HTTPS works fine. Backups go over HTTPS end to end, so this works
+  # regardless of what's between here and Heroku's database host.
+  #
+  # Restore into an EMPTY database (db:create, not db:setup) rather than
+  # one already carrying our current schema. If local migrations are
+  # ahead of production (e.g. a new table with a foreign key into
+  # "users"), pg_restore --clean only knows how to drop what's in the
+  # dump's own table of contents; it can't see that local-only
+  # dependent object, so dropping "users" to make way for the restored
+  # copy fails, which then cascades into missing-row foreign key errors
+  # later in the restore. Restoring into an empty database sidesteps
+  # this: pg_restore builds the schema fresh from the dump, so there's
+  # nothing to clean up first. db:migrate afterward brings that
+  # production-shaped schema forward to match local migrations.
   sh 'heroku pg:backups:capture --app production-bestpractices && ' \
-     'curl -o db/latest.dump `heroku pg:backups:url ' \
+     'curl -fo db/latest.dump `heroku pg:backups:url ' \
      '     --app production-bestpractices` && ' \
-     'rake db:reset && ' \
-     'pg_restore --verbose --clean --no-acl --no-owner -U `whoami` ' \
-     '           -d development db/latest.dump'
+     'rake drop_database && rake db:create && ' \
+     'pg_restore --verbose --no-acl --no-owner -U `whoami` ' \
+     '           -d development db/latest.dump && ' \
+     'rake db:migrate'
 end
 
-# This just copies the most recent backup of production; in almost
-# all cases this is adequate, and this way we don't disturb production
-# unnecessarily.  If you want the current active database, you can
-# force a backup with:
+# Copy the most recent backup of production to staging.
+# This way we don't disturb production unnecessarily.
+# If you want the current active database, you can # force a backup with:
 # heroku pg:backups:capture --app production-bestpractices
 # NOTE: deploying to staging no longer calls this.  The CircleCI deploy
 # job does the same refresh itself, under maintenance mode, whenever the
 # branch is exactly "staging".  This task remains for refreshing staging
-# out of band, without a deploy.
-#
-# The migration here is blocking, not "run:detached".  It used to be
-# detached because CI migrated again straight afterwards, so nobody
-# needed this one's result; run on its own, a migration whose outcome is
-# never reported is not worth running.
+# out of band, without a deploy. Watch to ensure it worked with no errors.
 desc 'Copy production database backup to staging (not part of deploying)'
 task production_to_staging: :no_rails do
   sh 'heroku pg:backups:restore $(heroku pg:backups:url ' \
      '--app production-bestpractices) DATABASE_URL ' \
      '--app staging-bestpractices --confirm staging-bestpractices'
-  sh 'heroku run --app staging-bestpractices -- ' \
+  sh 'script/heroku_run staging-bestpractices ' \
      'bundle exec rake db:migrate'
 end
 
@@ -1487,7 +1490,7 @@ task create_project_insertion_command: :no_rails do
 end
 
 # Change owner of PROJECT to USER. Both must be numbers. To use:
-# heroku run --app production-bestpractices rake change_owner -- PROJECT OWNER
+# script/heroku_run production-bestpractices rake change_owner -- PROJECT OWNER
 # You can run a SQL command to do this instead, but an error such as
 # forgetting the WHERE clause can cause a big mistake. The statement would be:
 # echo "UPDATE projects SET user_id = {OWNER_NUM} WHERE id = {PROJECT_NUM}" | \
@@ -2138,11 +2141,11 @@ task search_remote_users_tsv: :environment do
     name = shell_escape_if_known(fields[name_col]&.strip)
     email = shell_escape_if_known(fields[email_col]&.strip&.delete_prefix('email: '))
 
-    system("heroku run --app production-bestpractices rake search_user -- #{name} #{email}")
+    system("script/heroku_run production-bestpractices rake search_user -- #{name} #{email}")
     if email2_col
       email2 = shell_escape_if_known(fields[email2_col]&.strip)
       if email2 != 'UNKNOWN'
-        system("heroku run --app production-bestpractices rake search_email -- #{email2}")
+        system("script/heroku_run production-bestpractices rake search_email -- #{email2}")
       end
     end
     puts '---'

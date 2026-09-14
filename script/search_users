@@ -20,8 +20,9 @@ IFS="$(printf '\t')"
 
 while read -r name email
 do
-  # Must redirect stdin; otherwise "heroku run" will consume stdin.
-  heroku run --app production-bestpractices \
+  # Redirect stdin as a precaution, so nothing downstream can disturb
+  # this loop's own "read" on later iterations.
+  script/heroku_run production-bestpractices \
     rake search_user -- "$name" "$email" < /dev/null
   echo
 done

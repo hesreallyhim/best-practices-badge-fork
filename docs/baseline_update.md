@@ -336,7 +336,7 @@ metal series and without a full CDN flush:
 Purge both keys with a one-off dyno via the Heroku CLI:
 
 ```bash
-heroku run --app production-bestpractices -- \
+script/heroku_run production-bestpractices \
   bundle exec rake "fastly:purge_key[baseline_text,baseline_badges]"
 ```
 
@@ -476,7 +476,7 @@ On the live site, run it through the Heroku CLI (the `env` prefix sets the
 variable inside the one-off dyno):
 
 ```bash
-heroku run --app production-bestpractices -- \
+script/heroku_run production-bestpractices \
   env EFFECTIVE_DATE=2026-07-31 bundle exec rake update_baseline_badge_warnings
 ```
 
@@ -592,7 +592,7 @@ criteria from display, and close out the version notice.
    the two shared keys that cover this (see Step 9a for what they mean):
 
    ```bash
-   heroku run --app production-bestpractices -- \
+   script/heroku_run production-bestpractices \
      bundle exec rake "fastly:purge_key[baseline_text,baseline_badges]"
    ```
 
@@ -624,7 +624,7 @@ criteria from display, and close out the version notice.
    On the live site, run it through the Heroku CLI:
 
    ```bash
-   heroku run --app production-bestpractices -- \
+   script/heroku_run production-bestpractices \
      bundle exec rake recalc_baseline_and_notify_losses
    ```
 

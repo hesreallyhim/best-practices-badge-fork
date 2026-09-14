@@ -144,7 +144,7 @@ Comprehensive test suite includes:
 Here's one way to add a key while retaining old keys:
 
 ~~~~sh
-    heroku run --app staging-bestpractices bash
+    script/heroku_run staging-bestpractices
 
     BADGEAPP_UNSUBSCRIBE_KEYS="$(rails secret | head -c64),$BADGEAPP_UNSUBSCRIBE_KEYS"
 ~~~~
@@ -152,7 +152,7 @@ Here's one way to add a key while retaining old keys:
 Here's one way to remove all old keys (do later):
 
 ~~~~sh
-    heroku run --app staging-bestpractices bash
+    script/heroku_run staging-bestpractices
 
     BADGEAPP_UNSUBSCRIBE_KEYS="${BADGEAPP_UNSUBSCRIBE_KEYS%%,*}"
 ~~~~

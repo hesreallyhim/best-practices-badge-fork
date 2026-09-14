@@ -156,7 +156,7 @@ heroku config:set \
 # using the old key EMAIL_ENCRYPTION_KEY_OLD, then
 # encrypting using the new key EMAIL_ENCRYPTION_KEY. It
 # noisily skips those addresses that failed to decrypt.
-heroku run rake rekey --app $APP
+script/heroku_run $APP rake rekey
 
 # Remove the old key once rekey completes successfully.
 heroku config:unset EMAIL_ENCRYPTION_KEY_OLD --app $APP
@@ -191,7 +191,7 @@ heroku config:set SESSION_ID_HMAC_KEY=$VAL --app $APP
 # The now-unmatchable rows can never be looked up again under any key;
 # delete them rather than waiting up to 30 days for the daily purge
 # task's absolute-age cleanup (docs/login-session.md) to catch them.
-heroku run rails runner "LoginSession.delete_all" --app $APP
+script/heroku_run $APP rails runner "LoginSession.delete_all"
 ~~~
 
 #### Forcing re-authentication without rotating the key
@@ -202,11 +202,11 @@ needs no key change or redeploy: useful when a specific session
 re-authenticate right now:
 
 ~~~sh
-heroku run rails runner "LoginSession.delete_all" --app $APP
+script/heroku_run $APP rails runner "LoginSession.delete_all"
 ~~~
 
 The same remember-me caveat above applies: additionally run
-`heroku run rails runner "User.update_all(remember_digest: nil)" --app $APP`
+`script/heroku_run $APP rails runner "User.update_all(remember_digest: nil)"`
 if remember-me tokens must be invalidated too.
 
 ### Rotating `PENDING_RESUBMISSION_HMAC_KEY`
@@ -235,7 +235,7 @@ heroku config:set PENDING_RESUBMISSION_HMAC_KEY=$VAL --app $APP
 # delete them rather than waiting up to three days for the daily purge
 # task's age-based cleanup (docs/login-session-implementation.md
 # section 15) to catch them.
-heroku run rails runner "PendingResubmission.delete_all" --app $APP
+script/heroku_run $APP rails runner "PendingResubmission.delete_all"
 ~~~
 
 ### Rotating `BADGEAPP_BADPWKEY`
@@ -253,7 +253,7 @@ but to protect future passwords when they are compared to the database.
 # Generate a new key and rebuild the bad-password database.
 VAL=$(openssl rand -hex 128)
 heroku config:set BADGEAPP_BADPWKEY=$VAL --app $APP
-heroku run rake update_bad_password_db --app $APP
+script/heroku_run $APP rake update_bad_password_db
 ~~~
 
 ### Rotating GitHub OAuth Credentials
@@ -320,7 +320,7 @@ Then deploy and verify:
 NEW_FASTLY_API_KEY=...
 heroku config:set FASTLY_API_KEY=$NEW_FASTLY_API_KEY --app $APP
 # Verify CDN purges still work.
-heroku run rake fastly:purge_all --app $APP
+script/heroku_run $APP rake fastly:purge_all
 ~~~
 
 ### Rotating `DATABASE_URL`

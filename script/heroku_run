@@ -1,0 +1,33 @@
+#!/bin/bash
+# Copyright the Linux Foundation and the OpenSSF Best Practices badge
+# contributors
+# SPDX-License-Identifier: MIT
+
+# USAGE: script/heroku_run APP [COMMAND [ARG...]]
+# Run command on heroku, working around block of port 5000 on some nets
+# by using "heroku ps:exec" instead. The ps:exec doesn't get config vars,
+# so we compensate. "ps:exec" only works on Cedar; on Fir, use "run:inside".
+
+# With a COMMAND: runs it on APP's dyno with its config vars set, and
+# prints "Errorcode: N" at the end so errorcode is visible.
+# script's own exit status doesn't reflect it: "heroku ps:exec"
+
+# With no COMMAND: an interactive shell. Piping a setup script in was
+
+set -euo pipefail
+
+app="${1:?usage: $0 APP [COMMAND [ARG...]]}"
+shift
+heroku apps:info --app "$app" >/dev/null
+
+kv="$(heroku config --shell --app "$app" | tr '\n' ' ')"
+
+if [ "$#" -eq 0 ]; then
+  echo "Paste this if you want config vars loaded: env $kv bash"
+  exec heroku ps:exec --app "$app"
+fi
+
+# Run non-interactive command, hiding irrelevant info where we can
+cmd="$(printf '%q ' "$@")"
+{ echo 'stty -echo'; echo 'PS1='; echo "env $kv $cmd; echo Errorcode: \$?"; } | \
+  heroku ps:exec --app "$app" | sed '1,2d;$d'

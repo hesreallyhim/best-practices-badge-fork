@@ -235,9 +235,9 @@ and user emails, primarily to support GDPR Requests.
 Use as follows:
 
 ~~~~
-    heroku run --app production-bestpractices rake search_user -- 'NAME' 'EMAIL'
-    heroku run --app production-bestpractices rake search_name -- 'NAME'
-    heroku run --app production-bestpractices rake search_email -- 'EMAIL'
+    script/heroku_run production-bestpractices rake search_user -- 'NAME' 'EMAIL'
+    script/heroku_run production-bestpractices rake search_name -- 'NAME'
+    script/heroku_run production-bestpractices rake search_email -- 'EMAIL'
 ~~~~
 
 Note that `search_user` is a shorthand to search for `NAME` and then for
@@ -428,14 +428,14 @@ may have changed and you forgot to touch `.recalculate` in the migration,
 you can manually force the recalculations by doing:
 
 ~~~~sh
-    heroku run --app APP -- rake update_all_badge_percentages
+    script/heroku_run APP rake update_all_badge_percentages
 ~~~~
 
 After the site is up and running, if percentagies have been recalculated,
 purge the CDN cache:
 
 ~~~~sh
-    heroku run --app APP -- rake fastly:purge_all
+    script/heroku_run APP rake fastly:purge_all
 ~~~~
 
 ## Internationalization (i18n) and localization (l10n)
@@ -705,7 +705,7 @@ Given project number PROJECT and new owner user id OWNER,
 you can do this remotely with:
 
 ~~~~
-heroku run --app production-bestpractices rake change_owner -- PROJECT OWNER
+script/heroku_run production-bestpractices rake change_owner -- PROJECT OWNER
 ~~~~
 
 You can also do this with a SQL command but an error in the SQL command
@@ -969,7 +969,7 @@ You can purge the Fastly CDN cache this way (assuming you're
 allowed to log in to the relevant Heroku app):
 
 ~~~~sh
-heroku run --app HEROKU_APP_HERE rake fastly:purge
+script/heroku_run HEROKU_APP_HERE rake fastly:purge
 ~~~~
 
 This command will use the value of the FASTLY_API_KEY
@@ -1482,7 +1482,7 @@ Thus, after the updated bad-passwords file is sent, you need to have
 it update the database for use. Do this by running:
 
 ~~~~sh
-    heroku run --app APP rake update_bad_password_db
+    script/heroku_run APP rake update_bad_password_db
 ~~~~
 
 ## Installing CircleCI / Heroku keys

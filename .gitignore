@@ -21,6 +21,9 @@
 /db/*.sqlite3
 /db/*.sqlite3-journal
 
+# Ignore a production database dump pulled locally by "rake pull_production".
+/db/*.dump
+
 # Ignore all logfiles and tempfiles. Ignore the contents of these
 # directories rather than the directories themselves, so the exceptions
 # below can be re-included: git does not descend into an excluded
