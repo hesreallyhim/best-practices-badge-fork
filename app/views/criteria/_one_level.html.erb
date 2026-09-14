@@ -15,23 +15,17 @@
 
 <%# Add criterion markings. Different languages may mark these differently. %>
 <%=
-  if (criterion.na_allowed? && !criterion.na_justification_required?)
-    t('criteria_overall.na_allowed')
-  end
-%>
-<%=
   if criterion.na_justification_required?
     t('criteria_overall.na_justification_required')
-  end
-%>
-<%=
-  if (criterion.met_justification_required? && !criterion.met_url_required?)
-    t('criteria_overall.met_justification_required')
+  elsif criterion.na_allowed?
+    t('criteria_overall.na_allowed')
   end
 %>
 <%=
   if criterion.met_url_required?
     t('criteria_overall.met_url_required')
+  elsif criterion.met_justification_required?
+    t('criteria_overall.met_justification_required')
   end
 %>
 <%=

@@ -131,6 +131,17 @@ class CriteriaControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test 'Get silver criterion renders strongest requirement annotation' do
+    get '/en/criteria/1'
+    assert_response :success
+
+    assert_select "li[id='1.external_dependencies']", count: 1 do |elements|
+      text = elements.first.text
+      assert_includes text, '{Met URL}'
+      assert_not_includes text, '{Met justification}'
+    end
+  end
+
   test 'Get one criteria set, silver, in English' do
     get '/en/criteria/1'
     assert_response :success
