@@ -14,6 +14,7 @@
 <%= raw t("criteria.#{criteria_level}.#{criterion_key}.description") %>
 
 <%# Add criterion markings. Different languages may mark these differently. %>
+<%# Conditional branches below are ordered according to logical entailment. %>
 <%=
   if criterion.na_justification_required?
     t('criteria_overall.na_justification_required')
@@ -28,6 +29,7 @@
     t('criteria_overall.met_justification_required')
   end
 %>
+<%# These conditional branches are mutually exclusive. %>
 <%=
   if criterion.future?
     t('criteria_overall.future')

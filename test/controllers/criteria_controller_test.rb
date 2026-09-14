@@ -87,6 +87,8 @@ class CriteriaControllerTest < ActionDispatch::IntegrationTest
   end
 
   test 'Get baseline criteria honors boolean annotation values' do
+    # Regression test for issue #3017: Criteria page renderer logic 
+    # should reflect the declared boolean status of the markings
     get '/en/criteria/baseline-1'
     assert_response :success
     assert_select "li[id='baseline-1.osps_ac_01_01']", count: 1 do |elements|
